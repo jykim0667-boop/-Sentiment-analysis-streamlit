@@ -2,7 +2,6 @@ import streamlit as st
 from googleapiclient.discovery import build
 from transformers import pipeline
 from collections import Counter
-from konlpy.tag import Okt
 import re
 
 # ==========================================
@@ -178,33 +177,33 @@ if st.button("분석 시작"):
                 st.write(f"부정 😡 : {negative}")
 
                 # 키워드 분석
+# 키워드 분석
 
-                okt = Okt()
+words_list = []
 
-                nouns = []
+stopwords = [
+    "영상", "댓글", "진짜", "그냥",
+    "사람", "생각", "이거", "너무",
+    "정말", "완전", "ㅋㅋ", "ㅎㅎ"
+]
 
-                stopwords = [
-                    "영상", "댓글", "진짜", "그냥",
-                    "사람", "생각", "이거"
-                ]
+for comment in comments:
 
-                for comment in comments:
+    # 특수문자 제거
+    cleaned = re.sub(r"[^가-힣a-zA-Z0-9 ]", "", comment)
 
-                    try:
+    words = cleaned.split()
 
-                        words = okt.nouns(comment)
+    for word in words:
 
-                        for word in words:
+        if len(word) > 1 and word not in stopwords:
+            words_list.append(word)
 
-                            if len(word) > 1 and word not in stopwords:
-                                nouns.append(word)
-
-                    except:
-                        pass
+keyword_counter = Counter(words_list)
 
                 keyword_counter = Counter(nouns)
 
-                top_keywords = keyword_counter.most_common(5)
+                keyword_counter = Counter(words_list)
 
                 st.subheader("🔥 핵심 키워드")
 
