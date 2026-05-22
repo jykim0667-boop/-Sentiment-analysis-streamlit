@@ -8,7 +8,7 @@ import re
 # API KEY
 # ==========================================
 
-API_KEY = "AIzaSyAV-V1l1Tsb8MVY4KtLCF1C5c6Apl3UmMQ"
+API_KEY = "여기에_너의_API키"
 
 # ==========================================
 # 유튜브 API 연결
@@ -64,38 +64,45 @@ def get_comments(video_id, max_comments=100):
 
     comments = []
 
-    request = youtube.commentThreads().list(
-        part="snippet",
-        videoId=video_id,
-        maxResults=100,
-        textFormat="plainText"
-    )
+    try:
 
-    response = request.execute()
+        request = youtube.commentThreads().list(
+            part="snippet",
+            videoId=video_id,
+            maxResults=100,
+            textFormat="plainText"
+        )
 
-    while response and len(comments) < max_comments:
+        response = request.execute()
 
-        for item in response["items"]:
+        while response and len(comments) < max_comments:
 
-            comment = item["snippet"]["topLevelComment"]["snippet"]["textDisplay"]
+            for item in response["items"]:
 
-            if comment.strip():
-                comments.append(comment)
+                comment = item["snippet"]["topLevelComment"]["snippet"]["textDisplay"]
 
-        if "nextPageToken" in response:
+                if comment.strip():
+                    comments.append(comment)
 
-            request = youtube.commentThreads().list(
-                part="snippet",
-                videoId=video_id,
-                maxResults=100,
-                pageToken=response["nextPageToken"],
-                textFormat="plainText"
-            )
+            if "nextPageToken" in response:
 
-            response = request.execute()
+                request = youtube.commentThreads().list(
+                    part="snippet",
+                    videoId=video_id,
+                    maxResults=100,
+                    pageToken=response["nextPageToken"],
+                    textFormat="plainText"
+                )
 
-        else:
-            break
+                response = request.execute()
+
+            else:
+                break
+
+    except Exception as e:
+
+        st.error("댓글을 가져오는 중 오류 발생")
+        st.error(e)
 
     return comments
 
@@ -176,39 +183,55 @@ if st.button("분석 시작"):
                 st.write(f"중립 😐 : {neutral}")
                 st.write(f"부정 😡 : {negative}")
 
+                # ==========================================
                 # 키워드 분석
+                # ==========================================
 
+                words_list = []
 
-words_list = []
+                stopwords = [
+                    "영상", "댓글", "진짜", "그냥",
+                    "사람", "생각", "이거", "너무",
+                    "정말", "완전", "ㅋㅋ", "ㅎㅎ"
+                ]
 
-stopwords = [
-    "영상", "댓글", "진짜", "그냥",
-    "사람", "생각", "이거", "너무",
-    "정말", "완전", "ㅋㅋ", "ㅎㅎ"
-]
+                for comment in comments:
 
-for comment in comments:
+                    cleaned = re.sub(
+                        r"[^가-힣a-zA-Z0-9 ]",
+                        "",
+                        comment
+                    )
 
-    # 특수문자 제거
-    cleaned = re.sub(r"[^가-힣a-zA-Z0-9 ]", "", comment)
+                    words = cleaned.split()
 
-    words = cleaned.split()
+                    for word in words:
 
-    for word in words:
-
-        if len(word) > 1 and word not in stopwords:
-            words_list.append(word)
-
-keyword_counter = Counter(words_list)
-
-                keyword_counter = Counter(nouns)
+                        if len(word) > 1 and word not in stopwords:
+                            words_list.append(word)
 
                 keyword_counter = Counter(words_list)
 
+                top_keywords = keyword_counter.most_common(5)
+
+                # ==========================================
+                # 핵심 키워드 출력
+                # ==========================================
+
                 st.subheader("🔥 핵심 키워드")
 
-                for word, count in top_keywords:
-                    st.write(f"{word} ({count}회)")
+                if len(top_keywords) == 0:
+
+                    st.write("추출된 키워드가 없습니다.")
+
+                else:
+
+                    for word, count in top_keywords:
+                        st.write(f"{word} ({count}회)")
+
+                # ==========================================
+                # AI 요약
+                # ==========================================
 
                 keywords = [word for word, count in top_keywords]
 
@@ -220,8 +243,21 @@ keyword_counter = Counter(words_list)
                     st.write("1. 다양한 의견이 나타나는 영상입니다.")
 
                 if len(keywords) >= 3:
+
                     st.write(
                         f"2. '{keywords[0]}', '{keywords[1]}', '{keywords[2]}' 관련 언급이 많았습니다."
                     )
 
-                st.write("3. 댓글 반응을 통해 높은 관심도를 확인할 수 있습니다.")
+                elif len(keywords) > 0:
+
+                    st.write(
+                        f"2. '{keywords[0]}' 관련 반응이 자주 등장했습니다."
+                    )
+
+                else:
+
+                    st.write("2. 핵심 키워드 분석이 충분하지 않았습니다.")
+
+                st.write(
+                    "3. 댓글 반응을 통해 높은 관심도를 확인할 수 있습니다."
+                )
