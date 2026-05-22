@@ -177,7 +177,7 @@ if st.button("분석 시작"):
                 st.write(f"부정 😡 : {negative}")
 
                 # 키워드 분석
-# 키워드 분석
+
 
 words_list = []
 
