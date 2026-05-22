@@ -2,6 +2,5 @@ streamlit
 google-api-python-client
 transformers
 torch
-konlpy
 sentencepiece
 protobuf
