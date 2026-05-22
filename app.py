@@ -8,7 +8,7 @@ import re
 # API KEY
 # ==========================================
 
-API_KEY = "여기에_너의_API키"
+API_KEY = "AIzaSyAV-V1l1Tsb8MVY4KtLCF1C5c6Apl3UmMQ"
 
 # ==========================================
 # 유튜브 API 연결
